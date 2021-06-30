@@ -1,0 +1,30 @@
+{
+	"server":
+	{
+		"protocol": "tcp",
+		"host": "*",
+		"port": 5556,
+		"topic": "TALLYv0",
+		"max_cameras": 8
+	},
+	"client":
+	{
+		"protocol": "tcp",
+		"port": 5556,
+		"hosts":
+		[
+			"localhost"
+		],
+		"topic": "TALLYv0",
+		"camera_number": 1
+
+	},
+	"logging":
+	{
+		"name": "tally",
+		"level": "debug",
+		"filename": "/tmp/tally.log",
+		"filesize": 10485760
+	}
+
+}
