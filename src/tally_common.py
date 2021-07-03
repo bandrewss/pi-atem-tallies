@@ -5,6 +5,13 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 
+# camera op didn't understand code
+# I didn't understand camera
+# we could agree on baseball
+IN_THE_HOLE = 0 # No Tally
+ON_DECK = 1     # Preview Tally
+AT_BAT = 2      # Program Tally
+
 def get_args():
     parser = argparse.ArgumentParser(description="Tally Light Controller")
 

@@ -22,6 +22,7 @@ def main():
 
     _LOG.info("Current libzmq version is: {}".format(zmq.zmq_version()))
     _LOG.info("Current pyzmq version is: {}".format(zmq.__version__))
+    _LOG.info("Configured for Camera {}".format(client_conf["camera_number"]))
 
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
@@ -34,22 +35,26 @@ def main():
     _LOG.info("Subscribing to {}".format(topic))
     socket.setsockopt_string(zmq.SUBSCRIBE, topic)
 
-    camera_on = False
-    _LOG.info("[OFF]")
-    for current in range(16):
+    current_state = -1
+    while 1:
         string = socket.recv_string()
 
         payload = json.loads(string[len(topic) +1:])
+        state = payload[client_conf["camera_number"]]
 
-        if payload[client_conf["camera_number"]] != camera_on:
-            camera_on = payload[client_conf["camera_number"]]
-            
-            if camera_on:
-                _LOG.info("[ON]")
-            else:
-                _LOG.info("[OFF]")
-            #IF
+        if state == current_state:
+            continue
         #IF
+
+        if state == AT_BAT:
+            _LOG.info("Camera Tally [PROGRAM]")
+        elif state == ON_DECK:
+            _LOG.info("Camera Tally [PREVIEW]")
+        else:
+            _LOG.info("Camera Tally [OFF]")
+        #IF
+
+        current_state = state
     #FOR
 
 #DEF

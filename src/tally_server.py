@@ -7,11 +7,14 @@ import json
 
 # third party
 import zmq
+import PyATEMMax
 
 # local
 from tally_common import *
 
 _LOG = None
+
+IP = "192.168.250.240"
 
 
 def create_tally_payload(active_cam):
@@ -37,6 +40,10 @@ def main():
     _LOG.info("Current libzmq version is: {}".format(zmq.zmq_version()))
     _LOG.info("Current pyzmq version is: {}".format(zmq.__version__))
 
+    switcher = PyATEMMax.ATEMMax()
+    switcher.connect(IP)
+    switcher.waitForConnection()
+
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
 
@@ -45,12 +52,27 @@ def main():
     socket.bind(bind)
 
     while 1:
-        payload = create_tally_payload(random.randrange(0, 7))
+        #payload = create_tally_payload(random.randrange(0, 7))
+        payload = [IN_THE_HOLE] * 8
+        program_cam = switcher.programInput[0].videoSource.value
+        preview_cam = switcher.previewInput[0].videoSource.value
+
+        if preview_cam < len(payload):
+           payload[preview_cam] = ON_DECK
+        #IF
+
+        if program_cam < len(payload):
+            payload[program_cam] = AT_BAT
+        #IF
+
+        _LOG.debug("Active Camera: {}".format(program_cam))
+        _LOG.debug("Preview Camera {}".format(preview_cam))
 
         socket.send_string("{} {}".format(topic, json.dumps(payload)))
 
         # get the next active camera
-        time.sleep(1)
+        _LOG.debug("sleep 1")
+        time.sleep(0.1)
     #WHILE
 
     return 0
