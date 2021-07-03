@@ -5,23 +5,21 @@
 		"host": "*",
 		"port": 5556,
 		"topic": "TALLYv0",
-		"max_cameras": 8
+		"max_cameras": 8,
+		"switcher_host": "192.168.250.240",
+		"sleep": 0.1
 	},
 	"client":
 	{
 		"protocol": "tcp",
 		"port": 5556,
-		"hosts":
-		[
-			"localhost"
-		],
+		"host": "localhost",
 		"topic": "TALLYv0",
 		"camera_number": 1
 
 	},
 	"logging":
 	{
-		"name": "tally",
 		"level": "debug",
 		"filename": "/tmp/tally.log",
 		"filesize": 10485760

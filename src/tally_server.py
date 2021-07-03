@@ -10,72 +10,76 @@ import zmq
 import PyATEMMax
 
 # local
-from tally_common import *
-
-_LOG = None
-
-IP = "192.168.250.240"
+import tally_common as tc
 
 
-def create_tally_payload(active_cam):
-    payload = [False] * 8
-    payload[active_cam] = True
+def create_tally_payload(switcher, max_cameras):
+    payload = [tc.IN_THE_HOLE] * (max_cameras + 1)
 
-    _LOG.debug("Active Camera: {}".format(active_cam))
+    if tc.ARGS.demo:
+        program_cam = random.randrange(1, len(payload))
+        preview_cam = random.randrange(1, len(payload))
+    else:
+        program_cam = switcher.programInput[0].videoSource.value
+        preview_cam = switcher.previewInput[0].videoSource.value
+    #IF
+
+
+    if preview_cam < len(payload):
+       payload[preview_cam] = tc.ON_DECK
+    #IF
+
+    if program_cam < len(payload):
+        payload[program_cam] = tc.AT_BAT
+    #IF
+
+    tc.LOGGER.debug("Active Camera: {}".format(program_cam))
+    tc.LOGGER.debug("Preview Camera {}".format(preview_cam))
+
     
     return payload
 
 #DEF
 
 def main():
-    global _LOG
+    tc.init()
 
-    args = get_args()
-    config = get_config(args.config_file)
-    _LOG = get_logger(config["logging"])
-
-    server_conf = config["server"]
+    server_conf = tc.CONFIG["server"]
     topic = server_conf["topic"]
+    max_cameras = server_conf["max_cameras"]
+    sleep_time = server_conf["sleep"]
+    switcher_host = server_conf["switcher_host"]
 
-    _LOG.info("Current libzmq version is: {}".format(zmq.zmq_version()))
-    _LOG.info("Current pyzmq version is: {}".format(zmq.__version__))
+    tc.LOGGER.info("Current libzmq version is: {}".format(zmq.zmq_version()))
+    tc.LOGGER.info("Current pyzmq version is: {}".format(zmq.__version__))
 
-    switcher = PyATEMMax.ATEMMax()
-    switcher.connect(IP)
-    switcher.waitForConnection()
+    if tc.ARGS.demo:
+        tc.LOGGER.debug("Running in demo mode")
+        switcher = None
+    else:
+        tc.LOGGER.info("Connecting to switcher at {}".format(switcher_host))
+        switcher = PyATEMMax.ATEMMax()
+        switcher.connect(switcher_host)
+        switcher.waitForConnection()
+    #IF
 
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
 
     bind = "{}://{}:{}".format(server_conf["protocol"], server_conf["host"], server_conf["port"])
-    _LOG.debug("Binding to {}".format(bind))
+    tc.LOGGER.debug("ZMQ binding to {}".format(bind))
     socket.bind(bind)
 
     while 1:
-        #payload = create_tally_payload(random.randrange(0, 7))
-        payload = [IN_THE_HOLE] * 8
-        program_cam = switcher.programInput[0].videoSource.value
-        preview_cam = switcher.previewInput[0].videoSource.value
-
-        if preview_cam < len(payload):
-           payload[preview_cam] = ON_DECK
-        #IF
-
-        if program_cam < len(payload):
-            payload[program_cam] = AT_BAT
-        #IF
-
-        _LOG.debug("Active Camera: {}".format(program_cam))
-        _LOG.debug("Preview Camera {}".format(preview_cam))
+        payload = create_tally_payload(switcher, max_cameras)
 
         socket.send_string("{} {}".format(topic, json.dumps(payload)))
 
-        # get the next active camera
-        _LOG.debug("sleep 1")
-        time.sleep(0.1)
+        tc.LOGGER.debug("==SLEEP== [{}]".format(sleep_time))
+        time.sleep(sleep_time)
     #WHILE
 
-    return 0
+    return 1
 #DEF
 
 

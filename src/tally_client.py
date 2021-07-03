@@ -8,31 +8,37 @@ import json
 import zmq
 
 # local
-from tally_common import *
+import tally_common as tc
+
+def state_action(state):
+    if state == tc.AT_BAT:
+        tc.LOGGER.info("Camera Tally [PROGRAM]")
+    elif state == tc.ON_DECK:
+        tc.LOGGER.info("Camera Tally [PREVIEW]")
+    else:
+        tc.LOGGER.info("Camera Tally [OFF]")
+    #IF
+#DEF
 
 def main():
-    global _LOG
+    tc.init()
 
-    args = get_args()
-    config = get_config(args.config_file)
-    _LOG = get_logger(config["logging"])
-
-    client_conf = config["client"]
+    client_conf = tc.CONFIG["client"]
     topic = client_conf["topic"]
 
-    _LOG.info("Current libzmq version is: {}".format(zmq.zmq_version()))
-    _LOG.info("Current pyzmq version is: {}".format(zmq.__version__))
-    _LOG.info("Configured for Camera {}".format(client_conf["camera_number"]))
+    tc.LOGGER.info("Current libzmq version is: {}".format(zmq.zmq_version()))
+    tc.LOGGER.info("Current pyzmq version is: {}".format(zmq.__version__))
+    tc.LOGGER.info("Configured for Camera {}".format(client_conf["camera_number"]))
 
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
 
-    connect = "{}://{}:{}".format(client_conf["protocol"], client_conf["hosts"][0], client_conf["port"])
+    connect = "{}://{}:{}".format(client_conf["protocol"], client_conf["host"], client_conf["port"])
 
-    _LOG.info("Connecting to tally server: {}".format(connect))
+    tc.LOGGER.info("Connecting to tally server: {}".format(connect))
     socket.connect(connect)
 
-    _LOG.info("Subscribing to {}".format(topic))
+    tc.LOGGER.info("Subscribing to {}".format(topic))
     socket.setsockopt_string(zmq.SUBSCRIBE, topic)
 
     current_state = -1
@@ -46,13 +52,7 @@ def main():
             continue
         #IF
 
-        if state == AT_BAT:
-            _LOG.info("Camera Tally [PROGRAM]")
-        elif state == ON_DECK:
-            _LOG.info("Camera Tally [PREVIEW]")
-        else:
-            _LOG.info("Camera Tally [OFF]")
-        #IF
+        state_action(state)
 
         current_state = state
     #FOR

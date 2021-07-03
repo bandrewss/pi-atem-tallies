@@ -3,6 +3,7 @@
 import argparse
 import json
 import logging
+import socket
 from logging.handlers import RotatingFileHandler
 
 # camera op didn't understand code
@@ -12,32 +13,58 @@ IN_THE_HOLE = 0 # No Tally
 ON_DECK = 1     # Preview Tally
 AT_BAT = 2      # Program Tally
 
-def get_args():
+
+def init():
+    global ARGS
+    global CONFIG
+    global LOGGER
+
+    load_args()
+    load_config()
+    load_logger()
+#DEF
+
+def load_args():
+    global ARGS
+
     parser = argparse.ArgumentParser(description="Tally Light Controller")
 
     parser.add_argument("config_file", help="The location of the config file",
             nargs="?")
+    parser.add_argument("--demo", help="Run in demo mode",
+            action="store_true", default=False)
 
-    args = parser.parse_args()
+    ARGS = parser.parse_args()
 
-    if args.config_file is None:
-        args.config_file = "config.json"
+    if ARGS.config_file is None:
+        ARGS.config_file = "config.json"
     #IF
 
-    return args
 #DEF
 
-def get_config(config_file):
-    with open(config_file) as json_file:
-        config = json.load(json_file)
-    #WITH
+def load_config():
+    global CONFIG
 
-    return config
+    with open(ARGS.config_file) as json_file:
+        print("AM HERE")
+        CONFIG = json.load(json_file)
+    #WITH
 #DEF
     
-def get_logger(log_config):
-    logger = logging.getLogger(log_config["name"])
-    logger.setLevel(logging.DEBUG)
+def load_logger():
+    global LOGGER
+
+    log_config = CONFIG["logging"]
+
+    try:
+        hostname = socket.gethostname()
+    except:
+        hostname = "tally"
+    #TRY
+
+    LOGGER = logging.getLogger(hostname)
+    LOGGER.setLevel(logging.DEBUG)
+
 
     log_format = logging.Formatter("%(asctime)s | %(name)s | %(levelname)s | %(message)s")
 
@@ -48,9 +75,6 @@ def get_logger(log_config):
             maxBytes=log_config["filesize"], backupCount=1)
     rotating_file.setFormatter(log_format)
 
-
-    logger.addHandler(stdout)
-    logger.addHandler(rotating_file)
-
-    return logger
+    LOGGER.addHandler(stdout)
+    LOGGER.addHandler(rotating_file)
 #DEF
