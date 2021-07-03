@@ -13,11 +13,26 @@ IN_THE_HOLE = 0 # No Tally
 ON_DECK = 1     # Preview Tally
 AT_BAT = 2      # Program Tally
 
+PROGRAM_LED_NUM = 23
+PREVIEW_LED_NUM = 24
+
 
 def init():
     global ARGS
     global CONFIG
     global LOGGER
+    global ON_PI
+    global PROGRAM_LED
+    global PREVIEW_LED
+
+    try:
+        from gpiozero import LED
+        PROGRAM_LED = LED(PROGRAM_LED_NUM)
+        PREVIEW_LED = LED(PREVIEW_LED_NUM)
+        ON_PI = True
+    except ModuleNotFoundError:
+        ON_PI = False
+    #TRY
 
     load_args()
     load_config()
@@ -50,7 +65,7 @@ def load_config():
         CONFIG = json.load(json_file)
     #WITH
 #DEF
-    
+
 def load_logger():
     global LOGGER
 
@@ -77,4 +92,19 @@ def load_logger():
 
     LOGGER.addHandler(stdout)
     LOGGER.addHandler(rotating_file)
+#DEF
+
+def set_led(state):
+    if not ON_PI:
+        return
+    #IF
+
+    PROGRAM_LED.off()
+    PREVIEW_LED.off()
+
+    if state == AT_BAT:
+        PROGRAM_LED.on()
+    elif state == ON_DECK:
+        PREVIEW_LED.on()
+    #IF
 #DEF

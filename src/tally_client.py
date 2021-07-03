@@ -10,7 +10,7 @@ import zmq
 # local
 import tally_common as tc
 
-def state_action(state):
+def log_state(state):
     if state == tc.AT_BAT:
         tc.LOGGER.info("Camera Tally [PROGRAM]")
     elif state == tc.ON_DECK:
@@ -52,7 +52,8 @@ def main():
             continue
         #IF
 
-        state_action(state)
+        log_state(state)
+        tc.set_led(state)
 
         current_state = state
     #FOR
