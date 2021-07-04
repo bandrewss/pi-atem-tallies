@@ -18,9 +18,13 @@ PREVIEW_LED_NUM = 24
 
 
 def init():
-    global ARGS
-    global CONFIG
-    global LOGGER
+    init_leds()
+    load_args()
+    load_config()
+    load_logger()
+#DEF
+
+def init_leds():
     global ON_PI
     global PROGRAM_LED
     global PREVIEW_LED
@@ -33,10 +37,6 @@ def init():
     except ModuleNotFoundError:
         ON_PI = False
     #TRY
-
-    load_args()
-    load_config()
-    load_logger()
 #DEF
 
 def load_args():
