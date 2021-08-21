@@ -13,8 +13,8 @@ IN_THE_HOLE = 0 # No Tally
 ON_DECK = 1     # Preview Tally
 AT_BAT = 2      # Program Tally
 
-PROGRAM_LED_NUM = 23
-PREVIEW_LED_NUM = 24
+PROGRAM_LED_NUM = 24
+PREVIEW_LED_NUM = 23
 
 
 def init():
